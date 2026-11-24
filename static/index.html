@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>SR King — YouTube Video, Audio &amp; 16D Spatial Downloader</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5" />
+            <path d="M5 20h14" />
+          </svg>
+        </span>
+        <div class="brand-text">
+          <span class="brand-name">SR KING</span>
+          <span class="brand-sub">YouTube Media Utility</span>
+        </div>
+      </div>
+      <div class="status-pill" id="serverStatus" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span class="status-label">Connecting</span>
+      </div>
+    </header>
+
+    <main class="main-container">
+      <section class="hero-input-section" aria-label="YouTube link input">
+        <div class="hero-copy">
+          <h1>Paste a YouTube link. Download directly.</h1>
+          <p>High-quality Video + Audio up to 4K MP4, Studio MP3 / M4A, and Beat-Synced 16D Spatial Audio for earbuds.</p>
+        </div>
+
+        <form id="inspectForm" class="url-form" novalidate>
+          <div class="input-group" id="urlInputGroup">
+            <span class="input-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              </svg>
+            </span>
+            <input
+              id="urlInput"
+              type="url"
+              inputmode="url"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="https://www.youtube.com/watch?v=... or youtu.be/..."
+              aria-label="YouTube URL"
+              required
+            />
+            <button type="button" id="clearBtn" class="icon-btn hidden" title="Clear link" aria-label="Clear link">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+            <button type="button" id="pasteBtn" class="ghost-btn" title="Paste from clipboard">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="8" y="2" width="8" height="4" rx="1" />
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+              </svg>
+              <span>Paste</span>
+            </button>
+          </div>
+          <button type="submit" id="fetchBtn" class="primary-btn">
+            <span class="btn-label">Fetch Formats</span>
+            <span class="spinner hidden" id="fetchSpinner" aria-hidden="true"></span>
+          </button>
+        </form>
+
+        <div id="inputError" class="alert alert-error hidden" role="alert">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <span id="inputErrorText"></span>
+        </div>
+      </section>
+
+      <!-- Media Result & Quality Selector -->
+      <section id="mediaPanel" class="panel hidden" aria-label="Download options">
+        <div class="media-header">
+          <div class="thumb-wrap">
+            <img id="mediaThumb" src="" alt="" loading="lazy" />
+            <span id="mediaDuration" class="duration-badge mono">--:--</span>
+          </div>
+          <div class="media-meta">
+            <h2 id="mediaTitle" class="media-title"></h2>
+            <div class="media-sub">
+              <span id="mediaChannel" class="media-channel"></span>
+              <span class="dot-sep" aria-hidden="true">&middot;</span>
+              <a id="mediaSourceLink" href="#" target="_blank" rel="noopener noreferrer" class="source-link">YouTube Source</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="segmented-tabs" role="tablist" aria-label="Download format category">
+          <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-tab="video">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="2" y="4" width="20" height="16" rx="2" />
+              <path d="M7 4v16M17 4v16M2 9.5h5M2 14.5h5M17 9.5h5M17 14.5h5" />
+            </svg>
+            <span>Video + Audio</span>
+          </button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="audio">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 18V5l12-2v13" />
+              <circle cx="6" cy="18" r="3" />
+              <circle cx="18" cy="16" r="3" />
+            </svg>
+            <span>Audio</span>
+          </button>
+          <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="spatial16d">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+              <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
+            </svg>
+            <span>16D Spatial</span>
+          </button>
+        </div>
+
+        <div id="spatialNotice" class="info-banner hidden">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 16v-4M12 8h.01" />
+          </svg>
+          <span>7-Zone 3D HRTF Beat-Synced Spatial DSP — auto-detects track BPM and orbits melody in 360&deg; with centered punchy sub-bass. Best with stereo earbuds or headphones.</span>
+        </div>
+
+        <div id="qualityList" class="quality-list" role="radiogroup" aria-label="Available qualities"></div>
+
+        <div class="action-bar">
+          <div class="selected-summary">
+            <span class="summary-label">Selected</span>
+            <span id="selectedQualityText" class="summary-value mono">—</span>
+          </div>
+          <button type="button" id="downloadBtn" class="primary-btn download-cta">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 3v12m0 0-4.5-4.5M12 15l4.5-4.5" />
+              <path d="M5 20h14" />
+            </svg>
+            <span>Download Now</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Active Job Progress / Ready Panel -->
+      <section id="jobPanel" class="panel hidden" aria-live="polite" aria-label="Download progress">
+        <div class="job-header">
+          <div class="job-title-wrap">
+            <span id="jobStateBadge" class="badge badge-running">Processing</span>
+            <h3 id="jobStage" class="job-stage">Starting download</h3>
+          </div>
+          <span id="jobPercent" class="job-percent mono">0%</span>
+        </div>
+
+        <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="job-metrics">
+          <span id="jobSpeed" class="mono"></span>
+          <span id="jobEta" class="mono"></span>
+          <span id="jobBpm" class="mono hidden"></span>
+        </div>
+
+        <div id="jobErrorBox" class="alert alert-error hidden" role="alert">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <span id="jobErrorText"></span>
+        </div>
+
+        <div class="job-actions">
+          <button type="button" id="cancelJobBtn" class="danger-ghost-btn">Cancel</button>
+          <a id="saveFileBtn" href="#" class="primary-btn hidden" download>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 3v12m0 0-4.5-4.5M12 15l4.5-4.5" />
+              <path d="M5 20h14" />
+            </svg>
+            <span>Save File</span>
+          </a>
+          <button type="button" id="retryJobBtn" class="ghost-btn hidden">Retry</button>
+          <button type="button" id="newDownloadBtn" class="ghost-btn hidden">Choose Another Quality</button>
+        </div>
+      </section>
+
+      <!-- Recent Local History -->
+      <section id="historySection" class="history-section hidden" aria-label="Recent downloads">
+        <div class="section-head">
+          <h2>Recent Links</h2>
+          <button type="button" id="clearHistoryBtn" class="text-btn">Clear</button>
+        </div>
+        <div id="historyList" class="history-list"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>SR King v5.0 &middot; YouTube Direct Downloader</span>
+      <span class="footer-note">No playback streaming &middot; Direct file delivery</span>
+    </footer>
+  </div>
+
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
